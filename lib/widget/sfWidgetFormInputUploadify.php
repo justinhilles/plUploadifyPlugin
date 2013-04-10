@@ -29,8 +29,7 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
   {
     parent::configure($options, $attributes);
     
-    $this->addOption('uploadify_path', '/plUploadifyPlugin/vendor/jquery-uploadify');
-    $this->addOption('include_jquery', false);
+    $this->addOption('path', '/plUploadifyPlugin/vendor/jquery-uploadify');
   }
 
   /**
@@ -40,16 +39,19 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
    */
   public function getJavaScripts()
   {
-    $js = array(
-      $this->getOption('uploadify_path') . '/swfobject.js',
-      $this->getOption('uploadify_path') . '/jquery.uploadify.v2.1.0.min.js'
+    return array(
+      'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js',
+            $this->getOption('path') . '/jquery.uploadify.min.js',
     );
-
-    if($this->getOption('include_jquery'))
-      $js[] = "http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js";
-      
-    return $js;
   }
+
+  public function getStylesheets()
+  {
+    return array(
+      $this->getOption('path') . '/uploadify.css' => 'all'
+    );
+  }
+
 
   public function render($name, $value = null, $attributes = array(), $errors = array())
   {
@@ -60,8 +62,9 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
     $widget_id  = $this->getAttribute('id') ? $this->getAttribute('id') : $this->generateId($name);
     $session_name = ini_get('session.name');
     $session_id = session_id();
-    $uploader = $this->getOption('uploadify_path') . '/uploadify.swf';
-    $cancel_img = $this->getOption('uploadify_path') . '/cancel.png';
+    $uploader = $this->getOption('path').'/uploadify.swf';
+    $cancel_img = $this->getOption('path').'/cancel.png';
+    $button_img = $this->getOption('path').'/browse-btn.png';
     
     $form = new BaseForm();
     $csrf_token = $form->getCSRFToken();
@@ -74,20 +77,17 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
       </div>
       <script type="text/javascript">
         //<![CDATA[
-        $(document).ready(function() {
-          $('#$widget_id').uploadify({
-            'scriptData': {'$session_name':'$session_id', '_csrf_token':'$csrf_token'},
-            'uploader': '$uploader',
-            'cancelImg': '$cancel_img',
-            'auto'      : true,
-            'script': $('#$widget_id').closest('form').attr('action')+'/upload',
-            'folder': '/',
-            'multi': false,
-            'displayData': 'speed',
-            'fileDataName': '$widget_id',
-            'simUploadLimit': 2
+          jQuery('#$widget_id').uploadify({
+            swf             : '$uploader',
+            uploader        : jQuery('#$widget_id').closest('form').attr('action'),
+            debug           : false,              // Turn on swfUpload debugging mode
+            buttonImage     : '$button_img',
+            fileObjName     : 'upload[photos]',         // The name of the file object to use in your server-side script
+            formData        : {'$session_name':'$session_id', '_csrf_token':'$csrf_token'},                 // An object with additional data to send to the server-side upload script with every file upload
+            onUploadComplete: function(){
+              location.reload(); 
+            }
           });
-        });
         //]]>
       </script>
 EOF;
