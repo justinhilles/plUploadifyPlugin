@@ -29,7 +29,7 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
   {
     parent::configure($options, $attributes);
     
-    $this->addOption('path', '/plUploadifyPlugin/vendor/jquery-uploadify');
+    $this->addOption('path', '/plUploadifyPlugin/vendor/uploadify');
   }
 
   /**
@@ -40,8 +40,8 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
   public function getJavaScripts()
   {
     return array(
-      'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js',
-            $this->getOption('path') . '/jquery.uploadify.min.js',
+      'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
+      $this->getOption('path').'/jquery.uploadify.min.js',
     );
   }
 
@@ -51,7 +51,6 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
       $this->getOption('path') . '/uploadify.css' => 'all'
     );
   }
-
 
   public function render($name, $value = null, $attributes = array(), $errors = array())
   {
@@ -68,6 +67,7 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
     
     $form = new BaseForm();
     $csrf_token = $form->getCSRFToken();
+    $debug = sfConfig::get('sf_debug') ? 'true' : 'false';
     
     $output .= <<<EOF
       <div class="swfupload-buttontarget">
@@ -77,14 +77,16 @@ class sfWidgetFormInputUploadify extends sfWidgetFormInputFile
       </div>
       <script type="text/javascript">
         //<![CDATA[
+          var f = jQuery('#$widget_id').closest('form');
+
           jQuery('#$widget_id').uploadify({
             swf             : '$uploader',
-            uploader        : jQuery('#$widget_id').closest('form').attr('action'),
-            debug           : false,              // Turn on swfUpload debugging mode
+            uploader        : f.attr('action'),
+            debug           : $debug,
             buttonImage     : '$button_img',
-            fileObjName     : 'upload[photos]',         // The name of the file object to use in your server-side script
-            formData        : {'$session_name':'$session_id', '_csrf_token':'$csrf_token'},                 // An object with additional data to send to the server-side upload script with every file upload
-            onUploadComplete: function(){
+            fileObjName     : 'upload[photos]',
+            formData        : {'$session_name':'$session_id', '_csrf_token':'$csrf_token'},
+            onUploadSuccess: function(){
               location.reload(); 
             }
           });
